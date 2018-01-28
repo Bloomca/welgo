@@ -1,0 +1,30 @@
+{
+  "name": "welgo",
+  "version": "0.0.1",
+  "description": "server-side library to render html",
+  "main": "src/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bloomca/welgo.git"
+  },
+  "keywords": [
+    "javascript",
+    "node.js"
+  ],
+  "author": "Seva Zaikov <seva.zaikov@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Bloomca/welgo/issues"
+  },
+  "homepage": "https://github.com/Bloomca/welgo#readme",
+  "devDependencies": {
+    "jest": "^22.1.4"
+  }
+}
