@@ -1,5 +1,8 @@
 # Welgo
 
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
+[![Build Status](https://travis-ci.org/Bloomca/welgo.svg?branch=master)](https://travis-ci.org/Bloomca/welgo)
+
 > This is a WIP, and not ready yet. However, the whole project is more like a research, so feel free to ask question or suggest new features
 
 Server-side framework for rendering mostly static websites – it is _not_ suitable for applications.
@@ -7,14 +10,14 @@ Server-side framework for rendering mostly static websites – it is _not_ suita
 - Zero runtime
 - no VDOM
 - React-inspired components
-- support of events
 
 ## How does it work?
 
 It is a server-side framework, so you need to create components using it, and then render the whole page using top-level component.
-This framework will extract all code dependencies, and put them into script, which will be executed on the client-side. However, it is not a runtime – it is plain JavaScript, which will just add event listeners and execute your code.
 
 ## Rationale
+
+> After releasing this library I'll move this to the separate blog post
 
 This is intended to be a server-side framework for client-side code. What does it mean?
 
