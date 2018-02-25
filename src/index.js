@@ -46,27 +46,75 @@
  * - onchange
  */
 
-module.exports.render = render;
+// constant to detect if class was defined by welgo
+const IS_WELGO_CLASS = "$$__WELGO_CLASS_DEFINITION";
 
-module.exports.createWelgoClass = createWelgoClass;
+class Component {
+  constructor(props) {
+    this.props = props;
+  }
+}
+Component.IS_WELGO_CLASS = IS_WELGO_CLASS;
 
-module.exports.createElement = createElement;
-
-// this constant is needed to replace all extracted script code
-// to make page interactive
-const WELGO_SCRIPT_CODE_CONSTANT = "WELGO_SCRIPT_CODE_CONSTANT";
+module.exports = {
+  render,
+  createElement,
+  createWelgoClass,
+  Component
+};
 
 // this function will mount script code inside the rendered component
 // it assumes that it will receive the whole page as a component
-function render(tag, props, children) {
+function render(tag, props, ...children) {
   const updatedProps = {
-    ...props,
-    script: SCRIPT
+    ...props
+    // script: WELGO_SCRIPT_CODE_CONSTANT
   };
 
-  const { html, code } = createElement(tag, updatedProps, children);
+  const tree = createElement(tag, updatedProps, ...children);
 
-  return html.replace(WELGO_SCRIPT_CODE_CONSTANT, `<script>${code}</script>`);
+  return irender(tree, {});
+}
+
+function irender(tree, context) {
+  const tag = tree.nodeName;
+  const props = tree.props;
+  const processedChildren = processChildren(tree.children, context);
+  const updatedProps = {
+    ...props,
+    children: processedChildren
+  };
+
+  if (typeof tag === "string") {
+    const { processedProps, children } = processProps(props);
+    return `<${tag}${processedProps ? " " + processedProps : ""}>${children ||
+      processedChildren}</${tag}>`;
+  } else if (typeof tag === "function") {
+    // we have class definition
+    if (tag.prototype && tag.prototype.IS_WELGO_CLASS === IS_WELGO_CLASS) {
+      const component = new tag(updatedProps, context);
+      let newContext = context;
+      if (component.getChildContext) {
+        newContext = {
+          ...context,
+          ...component.getChildContext()
+        };
+      }
+      const childTree = component.render(); // tree
+      return irender(childTree, newContext);
+    } else {
+      // we have just function
+      const childTree = tag(props, context);
+      return irender(childTree, context);
+    }
+  } else if (typeof tag === "object") {
+    // let's assume we receive only objects
+    // with the render method
+    // since we don't have any state, we will just pass props
+    const childTree = tag.render(props, context);
+    return irender(childTree, context);
+  }
+  // tree
 }
 
 // analog to `createReactClass`. for now there is no magic at all
@@ -78,27 +126,16 @@ function createWelgoClass(object) {
 // as usual, accepts tag or another element, and
 // children in any form (both array and just arguments)
 function createElement(tag, props, ...children) {
-  const processedChildren = processChildren(children);
+  return {
+    nodeName: tag,
+    props,
+    children
+  };
+  // const { context, children } = processContext(rawChildren);
+  // const processedChildren = processChildren(children);
 
-  if (typeof tag === "string") {
-    const { processedProps, children } = processProps(props);
-    return {
-      html: `<${tag}${processedProps ? " " + processedProps : ""}>${children ||
-        processedChildren.html}</${tag}>`,
-      code: `${processedChildren.code}`
-    };
-  } else if (typeof tag === "object") {
-    // let's assume we receive only objects
-    // with the render method
-
-    const updatedProps = {
-      ...props,
-      children: processedChildren
-    };
-
-    // since we don't have any state, we will just pass props
-    return tag.render(props);
-  }
+  // // we have 0 context, but somehow we need to pass this context down
+  // // or to be able to climb up
 }
 
 // processing props does several things:
@@ -106,40 +143,46 @@ function createElement(tag, props, ...children) {
 // - transforming all event listeners into code
 // - stringifying all properties into attributes
 function processProps(props = {}) {
+  let propsArray = [];
   // we need to get actual element add add listeners to it
-  if (props.onClick) {
+  if (props && props.onClick) {
     `document.addEventListener`;
   }
 
+  Object.keys(props || {}).forEach(key => {
+    if (key.startsWith("on")) {
+      // handle event in the future
+    } else {
+      // add property to the list
+      const value = props[key];
+
+      // handle react's `className` convention
+      if (key === "className") {
+        propsArray.push(`class="${value}"`);
+      } else {
+        propsArray.push(`${key}="${value}"`);
+      }
+    }
+  });
+
   return {
-    processedProps: "",
-    children: props.children
+    processedProps: propsArray.join(" "),
+    children: props && props.children
   };
 }
 
-function processChildren(children) {
-  return children.reduce(
-    (acc, child) => {
-      if (Array.isArray(child)) {
-        const { html, code } = processChildren(child);
-        return {
-          html: acc.html + html,
-          code: acc.code + code
-        };
-      } else if (typeof child === "object" && child.html) {
-        return {
-          html: acc.html + child.html,
-          code: acc.code + child.code
-        };
-      } else if (typeof child === "string") {
-        return {
-          html: acc.html + child,
-          code: acc.code + ""
-        };
-      }
+function processChildren(children, context) {
+  return children.reduce((acc, child) => {
+    if (Array.isArray(child)) {
+      return acc + processChildren(child, context);
+    } else if (typeof child === "object" && child.nodeName) {
+      const tree = irender(child, context);
 
-      return acc;
-    },
-    { html: "", code: "" }
-  );
+      return acc + tree;
+    } else if (typeof child === "string") {
+      return acc + child;
+    }
+
+    return acc;
+  }, "");
 }

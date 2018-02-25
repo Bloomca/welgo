@@ -1,31 +1,37 @@
-const { createElement: h, createWelgoClass } = require("../src/index");
+const { createElement: h, createWelgoClass, render } = require("../src/index");
 
 test("renders without any children correctly", () => {
   const compiled = h("div", {});
 
-  expect(compiled.html).toBe("<div></div>");
+  expect(render(compiled.nodeName, compiled.props)).toBe("<div></div>");
 });
 
 test("renders one string child correctly", () => {
-  const compiled = h("div", {}, "something");
+  const compiled = render("div", {}, "something");
 
-  expect(compiled.html).toBe("<div>something</div>");
+  expect(compiled).toBe("<div>something</div>");
 });
 
 test("renders several string children correctly", () => {
-  const compiled = h("div", {}, "something", "another", "and the last one");
+  const compiled = render(
+    "div",
+    {},
+    "something",
+    "another",
+    "and the last one"
+  );
 
-  expect(compiled.html).toBe("<div>somethinganotherand the last one</div>");
+  expect(compiled).toBe("<div>somethinganotherand the last one</div>");
 });
 
 test("renders nested elements correctly", () => {
-  const compiled = h("div", {}, h("a", {}, "link text"));
+  const compiled = render("div", {}, h("a", {}, "link text"));
 
-  expect(compiled.html).toBe("<div><a>link text</a></div>");
+  expect(compiled).toBe("<div><a>link text</a></div>");
 });
 
 test("renders several nested elements correctly", () => {
-  const compiled = h(
+  const compiled = render(
     "div",
     {},
     h("a", {}, "link text"),
@@ -33,7 +39,7 @@ test("renders several nested elements correctly", () => {
     h("section", {}, "section text")
   );
 
-  expect(compiled.html).toBe(
+  expect(compiled).toBe(
     "<div><a>link text</a>something<section>section text</section></div>"
   );
 });
@@ -45,9 +51,9 @@ test("renders welgo class correctly", () => {
     }
   });
 
-  const compiled = h(El);
+  const compiled = render(El);
 
-  expect(compiled.html).toBe("<div>something</div>");
+  expect(compiled).toBe("<div>something</div>");
 });
 
 test("renders nested welgo classes correctly", () => {
@@ -63,9 +69,9 @@ test("renders nested welgo classes correctly", () => {
     }
   });
 
-  const compiled = h(El2);
+  const compiled = render(El2);
 
-  expect(compiled.html).toBe(
+  expect(compiled).toBe(
     "<div>second component<div>first component</div></div>"
   );
 });
