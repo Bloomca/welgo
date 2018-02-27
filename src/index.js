@@ -1,51 +1,3 @@
-/**
- * Basic example:
- *
- * h('div', null,
- *  h('div, null, 'some text'),
- *  h('div, null, 'another text')
- * );
- *
- * This is the simplest example. However, one important thing is that
- * we want to generate js code as well (e.g. for onclicks),
- * so all elements will produce an object { html, code }
- *
- * So, the call above will be transformed into (resolving only inner calls):
- *
- * h('div', null,
- *   { html: '<div>some text</div>', code: '' }
- *   { html '<div>another text</div>', code: '' }
- * );
- *
- * What is the point to generate onclicks, though?
- * - make async calls (easily doable, but need to be careful about calls)
- * - make state changes (so the content changes, but without runtime framework)
- *     this concept is complicated, since we strive to have no runtime.
- *     one possible solution is to render everything, and then show based
- *     on css, or our custom markup
- *
- *     other approach is, though, just to add some code, so it will be executed
- *     after this component mounts -> e.g. the user will do everything with $
- *     by themselves.
- *
- *     but, again, this code essentially belongs to the component. the problem is
- *     that it will work only without any imports (even fn calls are not fine)
- *
- *     so, possibly the easiest solution is to actually forbid all imports and
- *     closures, and _maybe_ introduce middleware as a concept to add abstraction,
- *     so later we
- *
- *     top component should receive two props – html and js
- *
- * jsx
- * - maybe through babel-runtime
- * - string templates
- *
- * list of events:
- * - onclick
- * - onchange
- */
-
 // constant to detect if class was defined by welgo
 const IS_WELGO_CLASS = "$$__WELGO_CLASS_DEFINITION";
 
@@ -54,7 +6,7 @@ class Component {
     this.props = props;
   }
 }
-Component.IS_WELGO_CLASS = IS_WELGO_CLASS;
+Component[IS_WELGO_CLASS] = true;
 
 module.exports = {
   render,
@@ -65,21 +17,18 @@ module.exports = {
 
 // this function will mount script code inside the rendered component
 // it assumes that it will receive the whole page as a component
-function render(tag, props, ...children) {
-  const updatedProps = {
-    ...props
-    // script: WELGO_SCRIPT_CODE_CONSTANT
-  };
-
-  const tree = createElement(tag, updatedProps, ...children);
-
-  return irender(tree, {});
+function render(tree, resolver) {
+  return irender(tree, {}, resolver);
 }
 
-function irender(tree, context) {
+async function irender(tree, context, resolver) {
   const tag = tree.nodeName;
   const props = tree.props;
-  const processedChildren = processChildren(tree.children, context);
+  const processedChildren = await processChildren(
+    tree.children,
+    context,
+    resolver
+  );
   const updatedProps = {
     ...props,
     children: processedChildren
@@ -91,8 +40,12 @@ function irender(tree, context) {
       processedChildren}</${tag}>`;
   } else if (typeof tag === "function") {
     // we have class definition
-    if (tag.prototype && tag.prototype.IS_WELGO_CLASS === IS_WELGO_CLASS) {
+    if (tag[IS_WELGO_CLASS] === true) {
       const component = new tag(updatedProps, context);
+      if (component && component.resolveData) {
+        const newProps = await component.resolveData(resolver);
+        component.props = { ...component.props, ...newProps };
+      }
       let newContext = context;
       if (component.getChildContext) {
         newContext = {
@@ -101,18 +54,18 @@ function irender(tree, context) {
         };
       }
       const childTree = component.render(); // tree
-      return irender(childTree, newContext);
+      return irender(childTree, newContext, resolver);
     } else {
       // we have just function
       const childTree = tag(props, context);
-      return irender(childTree, context);
+      return irender(childTree, context, resolver);
     }
   } else if (typeof tag === "object") {
     // let's assume we receive only objects
     // with the render method
     // since we don't have any state, we will just pass props
     const childTree = tag.render(props, context);
-    return irender(childTree, context);
+    return irender(childTree, context, resolver);
   }
   // tree
 }
@@ -171,18 +124,20 @@ function processProps(props = {}) {
   };
 }
 
-function processChildren(children, context) {
-  return children.reduce((acc, child) => {
-    if (Array.isArray(child)) {
-      return acc + processChildren(child, context);
-    } else if (typeof child === "object" && child.nodeName) {
-      const tree = irender(child, context);
+async function processChildren(children, context, resolver) {
+  const strings = await Promise.all(
+    children.map(child => {
+      if (Array.isArray(child)) {
+        return processChildren(child, context, resolver);
+      } else if (typeof child === "object" && child.nodeName) {
+        return irender(child, context, resolver);
+      } else if (typeof child === "string") {
+        return Promise.resolve(child);
+      }
 
-      return acc + tree;
-    } else if (typeof child === "string") {
-      return acc + child;
-    }
+      return Promise.resolve(null);
+    })
+  );
 
-    return acc;
-  }, "");
+  return strings.filter(Boolean).reduce((acc, child) => acc + child, "");
 }

@@ -3,17 +3,73 @@
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 [![Build Status](https://travis-ci.org/Bloomca/welgo.svg?branch=master)](https://travis-ci.org/Bloomca/welgo)
 
-> This is a WIP, and not ready yet. However, the whole project is more like a research, so feel free to ask question or suggest new features
-
-Server-side framework for rendering mostly static websites – it is _not_ suitable for applications.
+Server-side framework for rendering mostly static websites – it is _not_ suitable for complex applications, and is not a viable solution for single-page applications.
 
 - Zero runtime
 - no VDOM
 - React-inspired components
+- data resolving
 
-## How does it work?
+## Getting started
 
-It is a server-side framework, so you need to create components using it, and then render the whole page using top-level component.
+> you need to compile it with babel before running.
+
+```js
+const Welgo = require("welgo");
+const path = require("path");
+
+const express = require("express");
+
+const app = express();
+
+class Page extends Welgo.Component {
+  // resolve data asynchronously. returned object will be merged
+  // with props and `render` function will be called
+  resolveData(resolver) {
+    return {
+      topics: resolver.topics()
+    };
+  }
+
+  render() {
+    return (
+      <div>
+        {this.props.topics.join(", ")}
+      </div>
+    );
+  }
+}
+
+app.use(express.static(path.resolve(__dirname, "public")));
+
+app.get("*", async (req, res) => {
+  const page = await Welgo.render(<Page />, {
+    topics: () => ["first", "second"]
+  });
+  res.send(page);
+});
+
+app.listen(3000);
+
+```
+
+## Babel configuration
+
+You need to configure babel the same way as you'd use it with any other JSX engine:
+
+```js
+{
+  presets: [
+    [
+      "@babel/preset-react",
+      {
+        pragma: "Welgo.createElement",
+        pragmaFrag: "Welgo.Fragment"
+      }
+    ]
+  ]
+}
+```
 
 ## Rationale
 
@@ -35,7 +91,7 @@ However, there are reasons why people prefer them:
 
 There are other reasons, but these are from my point of view are the strongest – they allow to move from old template systems, and render markup in much more clear way.
 
-This framework intends to keep these benefits, while doing all the work only on the server-side, and ship zero runtime 
+This framework intends to keep these benefits, while doing all the work only on the server-side, and ship zero runtime.
 
 ## License
 
