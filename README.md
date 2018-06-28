@@ -73,7 +73,7 @@ You need to configure babel the same way as you'd use it with any other JSX engi
 
 ## Rationale
 
-> After releasing this library I'll move this to the separate blog post
+> After releasing this library I'll move this to a separate blog post
 
 This is intended to be a server-side framework for client-side code. What does it mean?
 
@@ -83,7 +83,7 @@ Modern frontend is very complicated, and while it allows to create very advanced
 - more traffic for downloading script files
 - more JS to parse and execute
 
-To summarize, the biggest problem is that we have to ship runtime, which will execute our code and render our application (again, we are talking about mostly static websites) – [see this tweet from netflix](https://mobile.twitter.com/NetflixUIE/status/923374215041912833).
+To summarize, the biggest problem is that we have to ship a runtime, which will execute our code and render our application (again, we are talking about mostly static websites) – [see this tweet from netflix](https://mobile.twitter.com/NetflixUIE/status/923374215041912833).
 
 However, there are reasons why people prefer them:
 - components

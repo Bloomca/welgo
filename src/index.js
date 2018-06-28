@@ -53,21 +53,24 @@ async function irender(tree, context, resolver) {
           ...component.getChildContext()
         };
       }
-      const childTree = component.render(); // tree
+      const childTree = await component.render(); // tree
       return irender(childTree, newContext, resolver);
     } else {
       // we have just function
-      const childTree = tag(props, context);
+      const childTree = await tag(updatedProps, context);
       return irender(childTree, context, resolver);
     }
   } else if (typeof tag === "object") {
     // let's assume we receive only objects
     // with the render method
     // since we don't have any state, we will just pass props
-    const childTree = tag.render(props, context);
+    if (tag.resolveData) {
+      const newProps = await tag.resolveData(resolver);
+      tag.props = { ...updatedProps, ...newProps };
+    }
+    const childTree = await tag.render(tag.props || updatedProps, context);
     return irender(childTree, context, resolver);
   }
-  // tree
 }
 
 // analog to `createReactClass`. for now there is no magic at all
@@ -84,11 +87,6 @@ function createElement(tag, props, ...children) {
     props,
     children
   };
-  // const { context, children } = processContext(rawChildren);
-  // const processedChildren = processChildren(children);
-
-  // // we have 0 context, but somehow we need to pass this context down
-  // // or to be able to climb up
 }
 
 // processing props does several things:

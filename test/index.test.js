@@ -75,3 +75,20 @@ test("renders nested welgo classes correctly", async () => {
     "<div>second component<div>first component</div></div>"
   );
 });
+
+test("resolves data correctly", async () => {
+  const El1 = createWelgoClass({
+    resolveData() {
+      return new Promise(resolve => {
+        setTimeout(() => resolve({ string: "some" }), 100);
+      });
+    },
+    render(props) {
+      return h("div", {}, props.string);
+    }
+  });
+
+  const compiled = await render(h(El1));
+
+  expect(compiled).toBe("<div>some</div>");
+});
