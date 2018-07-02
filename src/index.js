@@ -22,6 +22,10 @@ function render(tree, resolver) {
 }
 
 async function irender(tree, context, resolver) {
+  if (!tree) {
+    return "";
+  }
+
   const tag = tree.nodeName;
   const props = tree.props;
   const processedChildren = await processChildren(
@@ -127,7 +131,11 @@ async function processChildren(children, context, resolver) {
     children.map(child => {
       if (Array.isArray(child)) {
         return processChildren(child, context, resolver);
-      } else if (typeof child === "object" && child.nodeName) {
+      } else if (
+        typeof child === "object" &&
+        child !== null &&
+        child.nodeName
+      ) {
         return irender(child, context, resolver);
       } else if (typeof child === "string") {
         return Promise.resolve(child);
