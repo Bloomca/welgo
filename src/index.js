@@ -47,13 +47,6 @@ async function irender(tree, context, resolver) {
         const newProps = await component.resolveData(resolver);
         component.props = { ...component.props, ...newProps };
       }
-      let newContext = context;
-      if (component.getChildContext) {
-        newContext = {
-          ...context,
-          ...component.getChildContext()
-        };
-      }
       const processedChildren = await processCurrentChildren();
       component.props.children = processedChildren;
       const childTree = await component.render(); // tree
@@ -71,9 +64,9 @@ async function irender(tree, context, resolver) {
     // since we don't have any state, we will just pass props
     if (tag.resolveData) {
       const newProps = await tag.resolveData(resolver);
-      tag.props = { ...updatedProps, ...newProps };
+      tag.props = { ...props, ...newProps };
     }
-    const childTree = await tag.render(tag.props || updatedProps, context);
+    const childTree = await tag.render(tag.props || props, context);
     return irender(childTree, context, resolver);
   }
 }
