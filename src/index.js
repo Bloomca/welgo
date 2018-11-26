@@ -1,3 +1,7 @@
+// 1. no classes – confusing
+// 2. only functions – but async by nature
+// 3. context – no idea. we have only 1 prop, so maybe we can pass it as a second param.
+
 // constant to detect if class was defined by welgo
 const IS_WELGO_CLASS = "$$__WELGO_CLASS_DEFINITION";
 
@@ -16,7 +20,6 @@ module.exports = {
 };
 
 // this function will mount script code inside the rendered component
-// it assumes that it will receive the whole page as a component
 function render(tree, resolver) {
   return irender(tree, {}, resolver);
 }
@@ -27,25 +30,19 @@ async function irender(tree, context, resolver) {
   }
 
   const tag = tree.nodeName;
-  const props = tree.props;
-  const processedChildren = await processChildren(
-    tree.children,
-    context,
-    resolver
-  );
-  const updatedProps = {
-    ...props,
-    children: processedChildren
-  };
+  const props = tree.props || {};
+  const processCurrentChildren = () =>
+    processChildren(tree.children, context, resolver);
 
   if (typeof tag === "string") {
     const { processedProps, children } = processProps(props);
+    const processedChildren = await processCurrentChildren();
     return `<${tag}${processedProps ? " " + processedProps : ""}>${children ||
       processedChildren}</${tag}>`;
   } else if (typeof tag === "function") {
     // we have class definition
     if (tag[IS_WELGO_CLASS] === true) {
-      const component = new tag(updatedProps, context);
+      const component = new tag(props, context);
       if (component && component.resolveData) {
         const newProps = await component.resolveData(resolver);
         component.props = { ...component.props, ...newProps };
@@ -57,11 +54,15 @@ async function irender(tree, context, resolver) {
           ...component.getChildContext()
         };
       }
+      const processedChildren = await processCurrentChildren();
+      component.props.children = processedChildren;
       const childTree = await component.render(); // tree
-      return irender(childTree, newContext, resolver);
+      return irender(childTree, context, resolver);
     } else {
       // we have just function
-      const childTree = await tag(updatedProps, context);
+      const processedChildren = await processCurrentChildren();
+      props.children = processedChildren;
+      const childTree = await tag(props, context);
       return irender(childTree, context, resolver);
     }
   } else if (typeof tag === "object") {
