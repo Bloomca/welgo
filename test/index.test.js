@@ -1,4 +1,4 @@
-const { createElement: h, createWelgoClass, render } = require("../src/index");
+const { createElement: h, render } = require("../src/index");
 
 test("renders without any children correctly", async () => {
   const compiled = h("div", {});
@@ -44,30 +44,24 @@ test("renders several nested elements correctly", async () => {
   );
 });
 
-test("renders welgo class correctly", async () => {
-  const El = createWelgoClass({
-    render() {
-      return h("div", {}, "something");
-    }
-  });
+test("renders a welgo component correctly", async () => {
+  const El = function Component() {
+    return h("div", {}, "something");
+  };
 
   const compiled = await render(h(El));
 
   expect(compiled).toBe("<div>something</div>");
 });
 
-test("renders nested welgo classes correctly", async () => {
-  const El1 = createWelgoClass({
-    render() {
-      return h("div", {}, "first component");
-    }
-  });
+test("renders nested welgo components correctly", async () => {
+  const El1 = function Component1() {
+    return h("div", {}, "first component");
+  };
 
-  const El2 = createWelgoClass({
-    render() {
-      return h("div", {}, "second component", h(El1));
-    }
-  });
+  const El2 = function Component2() {
+    return h("div", {}, "second component", h(El1));
+  };
 
   const compiled = await render(h(El2));
 
@@ -76,17 +70,14 @@ test("renders nested welgo classes correctly", async () => {
   );
 });
 
-test("resolves data correctly", async () => {
-  const El1 = createWelgoClass({
-    resolveData() {
-      return new Promise(resolve => {
-        setTimeout(() => resolve({ string: "some" }), 100);
-      });
-    },
-    render(props) {
-      return h("div", {}, props.string);
-    }
-  });
+test("renders async functions correctly", async () => {
+  const El1 = async function Component() {
+    const { string } = await new Promise(resolve => {
+      setTimeout(() => resolve({ string: "some" }), 100);
+    });
+
+    return h("div", {}, string);
+  };
 
   const compiled = await render(h(El1));
 

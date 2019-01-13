@@ -1,18 +1,6 @@
-// constant to detect if class was defined by welgo
-const IS_WELGO_CLASS = "$$__WELGO_CLASS_DEFINITION";
-
-class Component {
-  constructor(props) {
-    this.props = props;
-  }
-}
-Component[IS_WELGO_CLASS] = true;
-
 module.exports = {
   render,
-  createElement,
-  createWelgoClass,
-  Component
+  createElement
 };
 
 // this function will mount script code inside the rendered component
@@ -35,40 +23,12 @@ async function irender(tree, resolver) {
     return `<${tag}${processedProps ? " " + processedProps : ""}>${children ||
       processedChildren}</${tag}>`;
   } else if (typeof tag === "function") {
-    // we have class definition
-    if (tag[IS_WELGO_CLASS] === true) {
-      const component = new tag(props, resolver);
-      if (component && component.resolveData) {
-        const newProps = await component.resolveData(resolver);
-        component.props = { ...component.props, ...newProps };
-      }
-      const processedChildren = await processCurrentChildren();
-      component.props.children = processedChildren;
-      const childTree = await component.render(); // tree
-      return irender(childTree, resolver);
-    } else {
-      // we have just function
-      const processedChildren = await processCurrentChildren();
-      props.children = processedChildren;
-      const childTree = await tag(props, resolver);
-      return irender(childTree, resolver);
-    }
-  } else if (typeof tag === "object") {
-    // let's assume we receive only objects
-    // with the render method
-    // since we don't have any state, we will just pass props
-    if (tag.resolveData) {
-      const newProps = await tag.resolveData(resolver);
-      tag.props = { ...props, ...newProps };
-    }
-    const childTree = await tag.render(tag.props || props, resolver);
+    // we have just function
+    const processedChildren = await processCurrentChildren();
+    props.children = processedChildren;
+    const childTree = await tag(props, resolver);
     return irender(childTree, resolver);
   }
-}
-
-// analog to `createReactClass`. for now there is no magic at all
-function createWelgoClass(object) {
-  return object;
 }
 
 // main building block.
