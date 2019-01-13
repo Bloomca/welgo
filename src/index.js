@@ -1,7 +1,3 @@
-// 1. no classes – confusing
-// 2. only functions – but async by nature
-// 3. context – no idea. we have only 1 prop, so maybe we can pass it as a second param.
-
 // constant to detect if class was defined by welgo
 const IS_WELGO_CLASS = "$$__WELGO_CLASS_DEFINITION";
 
@@ -21,18 +17,17 @@ module.exports = {
 
 // this function will mount script code inside the rendered component
 function render(tree, resolver) {
-  return irender(tree, {}, resolver);
+  return irender(tree, resolver);
 }
 
-async function irender(tree, context, resolver) {
+async function irender(tree, resolver) {
   if (!tree) {
     return "";
   }
 
   const tag = tree.nodeName;
   const props = tree.props || {};
-  const processCurrentChildren = () =>
-    processChildren(tree.children, context, resolver);
+  const processCurrentChildren = () => processChildren(tree.children, resolver);
 
   if (typeof tag === "string") {
     const { processedProps, children } = processProps(props);
@@ -42,7 +37,7 @@ async function irender(tree, context, resolver) {
   } else if (typeof tag === "function") {
     // we have class definition
     if (tag[IS_WELGO_CLASS] === true) {
-      const component = new tag(props, context);
+      const component = new tag(props, resolver);
       if (component && component.resolveData) {
         const newProps = await component.resolveData(resolver);
         component.props = { ...component.props, ...newProps };
@@ -50,13 +45,13 @@ async function irender(tree, context, resolver) {
       const processedChildren = await processCurrentChildren();
       component.props.children = processedChildren;
       const childTree = await component.render(); // tree
-      return irender(childTree, context, resolver);
+      return irender(childTree, resolver);
     } else {
       // we have just function
       const processedChildren = await processCurrentChildren();
       props.children = processedChildren;
-      const childTree = await tag(props, context);
-      return irender(childTree, context, resolver);
+      const childTree = await tag(props, resolver);
+      return irender(childTree, resolver);
     }
   } else if (typeof tag === "object") {
     // let's assume we receive only objects
@@ -66,8 +61,8 @@ async function irender(tree, context, resolver) {
       const newProps = await tag.resolveData(resolver);
       tag.props = { ...props, ...newProps };
     }
-    const childTree = await tag.render(tag.props || props, context);
-    return irender(childTree, context, resolver);
+    const childTree = await tag.render(tag.props || props, resolver);
+    return irender(childTree, resolver);
   }
 }
 
@@ -120,17 +115,17 @@ function processProps(props = {}) {
   };
 }
 
-async function processChildren(children, context, resolver) {
+async function processChildren(children, resolver) {
   const strings = await Promise.all(
     children.map(child => {
       if (Array.isArray(child)) {
-        return processChildren(child, context, resolver);
+        return processChildren(child, resolver);
       } else if (
         typeof child === "object" &&
         child !== null &&
         child.nodeName
       ) {
-        return irender(child, context, resolver);
+        return irender(child, resolver);
       } else if (typeof child === "string") {
         return Promise.resolve(child);
       }

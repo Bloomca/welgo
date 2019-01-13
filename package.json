@@ -26,5 +26,8 @@
   "homepage": "https://github.com/Bloomca/welgo#readme",
   "devDependencies": {
     "jest": "^22.1.4"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
