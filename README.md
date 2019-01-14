@@ -3,12 +3,11 @@
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 [![Build Status](https://travis-ci.org/Bloomca/welgo.svg?branch=master)](https://travis-ci.org/Bloomca/welgo)
 
-Server-side framework for rendering mostly static websites – it is _not_ suitable for complex applications, and is not a viable solution for single-page applications.
+Server-side library with react-like components (JSX supported).
 
 - Zero runtime
-- no VDOM
 - React-inspired components
-- data resolving
+- Async components (fetch data where you need it)
 
 ## Getting started
 
@@ -22,35 +21,27 @@ const express = require("express");
 
 const app = express();
 
-class Page extends Welgo.Component {
-  // resolve data asynchronously. returned object will be merged
-  // with props and `render` function will be called
-  resolveData(resolver) {
-    return {
-      topics: resolver.topics()
-    };
-  }
+async function Page(null, { getTopics }) {
+  // you can call async functions inside components
+  const topics = await getTopics();
 
-  render() {
-    return (
-      <div>
-        {this.props.topics.join(", ")}
-      </div>
-    );
-  }
+  return (
+    <div>
+      {this.props.topics.join(", ")}
+    </div>
+  );
 }
 
 app.use(express.static(path.resolve(__dirname, "public")));
 
 app.get("*", async (req, res) => {
   const page = await Welgo.render(<Page />, {
-    topics: () => ["first", "second"]
+    getTopics: () => ... // fetch topics
   });
   res.send(page);
 });
 
 app.listen(3000);
-
 ```
 
 ## Babel configuration
