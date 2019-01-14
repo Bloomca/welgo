@@ -6,6 +6,26 @@ module.exports = {
   Fragment
 };
 
+// so-called "void elements". can't have any "children"
+// see more at https://developer.mozilla.org/en-US/docs/Glossary/empty_element
+const SELF_CLOSING_TAGS = {
+  area: true,
+  base: true,
+  br: true,
+  col: true,
+  embed: true,
+  hr: true,
+  img: true,
+  input: true,
+  keygen: true,
+  link: true,
+  meta: true,
+  param: true,
+  source: true,
+  track: true,
+  wbr: true
+};
+
 const FRAGMENT_TAG_NAME = "$$__FRAGMENT__TAG";
 
 function Fragment({ children, ...props }) {
@@ -33,7 +53,13 @@ function renderStructure(structure) {
   if (tag === FRAGMENT_TAG_NAME) {
     return `${unsafeHTML}${childrenHTML}`;
   } else {
-    return `<${tag}${attrs}>${unsafeHTML}${childrenHTML}</${tag}>`;
+    if (SELF_CLOSING_TAGS[tag]) {
+      // don't evem wprru about children and unsafe HTML
+      // void elements can't have them
+      return `<${tag}${attrs} />`;
+    } else {
+      return `<${tag}${attrs}>${unsafeHTML}${childrenHTML}</${tag}>`;
+    }
   }
 }
 

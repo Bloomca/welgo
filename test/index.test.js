@@ -108,6 +108,42 @@ test("passed resolver data correctly", async () => {
   expect(compiled).toBe("<div>my string</div>");
 });
 
+test("render an attribute correctly", async () => {
+  const El = function Component() {
+    return h("div", { title: "some" }, "title");
+  };
+
+  const compiled = await render(h(El));
+
+  expect(compiled).toBe('<div title="some">title</div>');
+});
+
+test("renders several attributes correctly", async () => {
+  const El = function Component() {
+    return h("img", {
+      alt: "my picture",
+      title: "banner",
+      src: "http://localhost"
+    });
+  };
+
+  const compiled = await render(h(El));
+
+  expect(compiled).toBe(
+    '<img alt="my picture" title="banner" src="http://localhost" />'
+  );
+});
+
+test("ignores nested html on self-closing tags", async () => {
+  const El = function Component() {
+    return h("hr", { class: "line" }, h("div", {}, "text"));
+  };
+
+  const compiled = await render(h(El));
+
+  expect(compiled).toBe('<hr class="line" />');
+});
+
 test("renders style as a string correctly", async () => {
   const El = function Component() {
     return h("div", { style: "color: red" }, "some");
