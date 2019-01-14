@@ -10,12 +10,7 @@ function Fragment({ children }) {
   return createElement(FRAGMENT_TAG_NAME, {}, ...children);
 }
 
-// this function will mount script code inside the rendered component
-function render(tree, resolver) {
-  return irender(tree, resolver);
-}
-
-async function irender(tree, resolver) {
+async function render(tree, resolver) {
   if (!tree) {
     return "";
   }
@@ -37,7 +32,7 @@ async function irender(tree, resolver) {
     const processedChildren = await processCurrentChildren();
     props.children = processedChildren;
     const childTree = await tag(props, resolver);
-    return irender(childTree, resolver);
+    return render(childTree, resolver);
   }
 }
 
@@ -76,17 +71,34 @@ function processProps(props = {}) {
           const resultStyle = Object.keys(value).reduce(
             (styleString, styleKey) => {
               const styleValue = value[styleKey];
-              const property = `${styleKey}:${styleValue};`;
 
-              return styleString + property;
+              if (styleValue) {
+                const property = `${styleKey}:${styleValue};`;
+
+                return styleString + property;
+              }
+
+              return styleString;
             },
             ""
           );
 
-          propsArray.push(`${key}="${resultStyle}"`);
+          // no need to set an empty style string
+          if (resultStyle) {
+            propsArray.push(`${key}="${resultStyle}"`);
+          }
         }
       } else {
-        propsArray.push(`${key}="${value}"`);
+        // falsy values can get `0` and empty strings, we don't want that
+        if (value === false || value === undefined || value === null) {
+          // we ignore properties which are explicitly set to `false`
+        } else if (value === true) {
+          // we don't set any value in case property is set to true
+          // attribute name is enough
+          propsArray.push(key);
+        } else {
+          propsArray.push(`${key}="${value}"`);
+        }
       }
     });
 
@@ -106,7 +118,7 @@ async function processChildren(children, resolver) {
         child !== null &&
         child.nodeName
       ) {
-        return irender(child, resolver);
+        return render(child, resolver);
       } else if (typeof child === "string") {
         return Promise.resolve(child);
       }

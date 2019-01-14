@@ -118,6 +118,16 @@ test("renders style as an object", async () => {
   expect(compiled).toBe('<div style="color:red;">some</div>');
 });
 
+test("does not render style at all in case of no properties", async () => {
+  const El = function Component() {
+    return h("div", { style: { color: null } }, "some");
+  };
+
+  const compiled = await render(h(El));
+
+  expect(compiled).toBe("<div>some</div>");
+});
+
 test("Welgo.Fragment works correctly", async () => {
   const El = function Component() {
     return h(Fragment, {}, h("div", {}, "some"), h("span", {}, "another"));
@@ -126,4 +136,24 @@ test("Welgo.Fragment works correctly", async () => {
   const compiled = await render(h(El));
 
   expect(compiled).toBe("<div>some</div><span>another</span>");
+});
+
+test("properties with false value should not be in the DOM", async () => {
+  const El = function Component() {
+    return h("div", { disabled: false }, "title");
+  };
+
+  const compiled = await render(h(El));
+
+  expect(compiled).toBe("<div>title</div>");
+});
+
+test("properties with true value should have only attribute", async () => {
+  const El = function Component() {
+    return h("div", { disabled: true }, "title");
+  };
+
+  const compiled = await render(h(El));
+
+  expect(compiled).toBe("<div disabled>title</div>");
 });
