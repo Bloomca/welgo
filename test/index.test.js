@@ -58,6 +58,16 @@ test("renders a welgo component correctly", async () => {
   expect(compiled).toBe("<div>something</div>");
 });
 
+test("passes props to a rendered component correctly", async () => {
+  const El = function Component({ string }) {
+    return h("div", {}, string);
+  };
+
+  const compiled = await render(h(El, { string: "some" }));
+
+  expect(compiled).toBe("<div>some</div>");
+});
+
 test("renders nested welgo components correctly", async () => {
   const El1 = function Component1() {
     return h("div", {}, "first component");
@@ -156,4 +166,34 @@ test("properties with true value should have only attribute", async () => {
   const compiled = await render(h(El));
 
   expect(compiled).toBe("<div disabled>title</div>");
+});
+
+test("it escapes HTML entities in plain strings", async () => {
+  const El = function Component() {
+    return h("div", {}, "<my text>");
+  };
+
+  const compiled = await render(h(El));
+
+  expect(compiled).toBe("<div>&ltmy text&gt</div>");
+});
+
+test("it should render HTML if unsafe is passed", async () => {
+  const El = function Component() {
+    return h("div", { dangerouslySetInnerHTML: { __html: "<my text>" } });
+  };
+
+  const compiled = await render(h(El));
+
+  expect(compiled).toBe("<div><my text></div>");
+});
+
+test("it should render HTML if unsafe is passed in Fragment", async () => {
+  const El = function Component() {
+    return h(Fragment, { dangerouslySetInnerHTML: { __html: "<my text>" } });
+  };
+
+  const compiled = await render(h(El));
+
+  expect(compiled).toBe("<my text>");
 });

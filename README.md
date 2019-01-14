@@ -73,7 +73,7 @@ I used library [htm](https://github.com/developit/htm), which is especially nift
 npm i --save welgo
 ```
 
-You'll need to use Node 8+ in order to use it. If you want to use it on the client-side, you can do, but keep in mind that source code is not transpiled to ES5.
+You'll need to use Node 9+ in order to use it. If you want to use it on the client-side, you can do, but keep in mind that source code is not transpiled to ES5.
 
 ## API
 
