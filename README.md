@@ -3,9 +3,9 @@
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 [![Build Status](https://travis-ci.org/Bloomca/welgo.svg?branch=master)](https://travis-ci.org/Bloomca/welgo)
 
-Server-side library with react-like components (JSX supported).
+Server-side library with react-like components (JSX supported), replacement for template languages.
 
-- Zero runtime
+- Zero dependencies
 - React-inspired components
 - Async components (fetch data where you need it)
 

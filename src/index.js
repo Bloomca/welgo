@@ -44,30 +44,41 @@ function createElement(tag, props, ...children) {
 
 // processing props does several things:
 // - extracting children props
-// - transforming all event listeners into code
 // - stringifying all properties into attributes
 function processProps(props = {}) {
   let propsArray = [];
-  // we need to get actual element add add listeners to it
-  if (props && props.onClick) {
-    `document.addEventListener`;
-  }
 
-  Object.keys(props || {}).forEach(key => {
-    if (key.startsWith("on")) {
-      // handle event in the future
-    } else {
-      // add property to the list
+  Object.keys(props || {})
+    .filter(key => key !== "children")
+    .forEach(key => {
       const value = props[key];
 
-      // handle react's `className` convention
       if (key === "className") {
+        // handle react's `className` convention
+        // treat it like the "class"
         propsArray.push(`class="${value}"`);
+      } else if (key === "style") {
+        // we allow both objects and strings
+
+        if (typeof value === "string") {
+          propsArray.push(`${key}="${value}"`);
+        } else if (value && typeof value === "object") {
+          const resultStyle = Object.keys(value).reduce(
+            (styleString, styleKey) => {
+              const styleValue = value[styleKey];
+              const property = `${styleKey}:${styleValue};`;
+
+              return styleString + property;
+            },
+            ""
+          );
+
+          propsArray.push(`${key}="${resultStyle}"`);
+        }
       } else {
         propsArray.push(`${key}="${value}"`);
       }
-    }
-  });
+    });
 
   return {
     processedProps: propsArray.join(" "),

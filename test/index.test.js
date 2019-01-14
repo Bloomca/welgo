@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 const { createElement: h, render } = require("../src/index");
 
 test("renders without any children correctly", async () => {
@@ -71,7 +75,7 @@ test("renders nested welgo components correctly", async () => {
 });
 
 test("renders async functions correctly", async () => {
-  const El1 = async function Component() {
+  const El = async function Component() {
     const { string } = await new Promise(resolve => {
       setTimeout(() => resolve({ string: "some" }), 100);
     });
@@ -79,7 +83,37 @@ test("renders async functions correctly", async () => {
     return h("div", {}, string);
   };
 
-  const compiled = await render(h(El1));
+  const compiled = await render(h(El));
 
   expect(compiled).toBe("<div>some</div>");
+});
+
+test("passed resolver data correctly", async () => {
+  const El = function Component(props, { string }) {
+    return h("div", {}, string);
+  };
+
+  const compiled = await render(h(El), { string: "my string" });
+
+  expect(compiled).toBe("<div>my string</div>");
+});
+
+test("renders style as a string correctly", async () => {
+  const El = function Component() {
+    return h("div", { style: "color: red" }, "some");
+  };
+
+  const compiled = await render(h(El));
+
+  expect(compiled).toBe('<div style="color: red">some</div>');
+});
+
+test("renders style as an object", async () => {
+  const El = function Component() {
+    return h("div", { style: { color: "red" } }, "some");
+  };
+
+  const compiled = await render(h(El));
+
+  expect(compiled).toBe('<div style="color:red;">some</div>');
 });
