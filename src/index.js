@@ -1,7 +1,14 @@
 module.exports = {
   render,
-  createElement
+  createElement,
+  Fragment
 };
+
+const FRAGMENT_TAG_NAME = "$$__FRAGMENT__TAG";
+
+function Fragment({ children }) {
+  return createElement(FRAGMENT_TAG_NAME, {}, ...children);
+}
 
 // this function will mount script code inside the rendered component
 function render(tree, resolver) {
@@ -20,10 +27,13 @@ async function irender(tree, resolver) {
   if (typeof tag === "string") {
     const { processedProps, children } = processProps(props);
     const processedChildren = await processCurrentChildren();
-    return `<${tag}${processedProps ? " " + processedProps : ""}>${children ||
-      processedChildren}</${tag}>`;
+    if (tag === FRAGMENT_TAG_NAME) {
+      return children || processedChildren;
+    } else {
+      return `<${tag}${processedProps ? " " + processedProps : ""}>${children ||
+        processedChildren}</${tag}>`;
+    }
   } else if (typeof tag === "function") {
-    // we have just function
     const processedChildren = await processCurrentChildren();
     props.children = processedChildren;
     const childTree = await tag(props, resolver);

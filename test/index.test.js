@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-const { createElement: h, render } = require("../src/index");
+const { createElement: h, render, Fragment } = require("../src/index");
 
 test("renders without any children correctly", async () => {
   const compiled = h("div", {});
@@ -116,4 +116,14 @@ test("renders style as an object", async () => {
   const compiled = await render(h(El));
 
   expect(compiled).toBe('<div style="color:red;">some</div>');
+});
+
+test("Welgo.Fragment works correctly", async () => {
+  const El = function Component() {
+    return h(Fragment, {}, h("div", {}, "some"), h("span", {}, "another"));
+  };
+
+  const compiled = await render(h(El));
+
+  expect(compiled).toBe("<div>some</div><span>another</span>");
 });
