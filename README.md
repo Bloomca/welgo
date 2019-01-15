@@ -77,7 +77,7 @@ You'll need to use Node 9+ in order to use it. If you want to use it on the clie
 
 ## API
 
-If you are faimilar with [React](https://reactjs.org/docs/getting-started.html), then you know pretty much all of it. Since there is no lifecycle on the server, all components are _functions only_, with two parameters:
+If you are familiar with [React](https://reactjs.org/docs/getting-started.html), then you know pretty much all of it. Since there is no lifecycle on the server, all components are _functions only_, with two parameters:
 
 - passed properties
 - resolvers
