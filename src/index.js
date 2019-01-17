@@ -43,6 +43,15 @@ function renderStructure(structure) {
     return escapeHTML(structure);
   }
 
+  if (typeof structure === "number") {
+    return escapeHTML(String(structure));
+  }
+
+  if (typeof structure === "boolean") {
+    // just ignore boolean values as children
+    return "";
+  }
+
   if (Array.isArray(structure)) {
     return structure.map(renderStructure).join("");
   }
@@ -185,6 +194,11 @@ async function processChildren(children, resolver) {
         return irender(child, resolver);
       } else if (typeof child === "string") {
         return Promise.resolve(child);
+      } else if (typeof child === "object" && child !== null && !child.tag) {
+        throw new Error(`
+          You can not pass plain object as children. You passed a following object:
+          ${JSON.stringify(child)}
+        `);
       }
 
       return Promise.resolve(child);

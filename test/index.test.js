@@ -233,3 +233,61 @@ test("it should render HTML if unsafe is passed in Fragment", async () => {
 
   expect(compiled).toBe("<my text>");
 });
+
+test("it should render number as children converting them to strings", async () => {
+  const El = function Component() {
+    return h("div", null, 123.35, " ", 35);
+  };
+
+  const compiled = await render(h(El));
+
+  expect(compiled).toBe("<div>123.35 35</div>");
+});
+
+test("it should ignore booleans as children", async () => {
+  const El = function Component() {
+    return h("div", null, true, "text", false);
+  };
+
+  const compiled = await render(h(El));
+
+  expect(compiled).toBe("<div>text</div>");
+});
+
+test("it should ignore undefined as children", async () => {
+  const El = function Component() {
+    return h("div", null, undefined, "text", undefined);
+  };
+
+  const compiled = await render(h(El));
+
+  expect(compiled).toBe("<div>text</div>");
+});
+
+test("it should ignore null as children", async () => {
+  const El = function Component() {
+    return h("div", null, null, "text", null);
+  };
+
+  const compiled = await render(h(El));
+
+  expect(compiled).toBe("<div>text</div>");
+});
+
+test("it should render an array if passed as children", async () => {
+  const El = function Component() {
+    return h("div", null, "text", " ", [1, 2, 3]);
+  };
+
+  const compiled = await render(h(El));
+
+  expect(compiled).toBe("<div>text 123</div>");
+});
+
+test("it should throw if you pass an object as a child", async () => {
+  const El = function Component() {
+    return h("div", null, { prop: true });
+  };
+
+  return expect(render(h(El))).rejects.toThrow(/You can not pass plain object/);
+});
