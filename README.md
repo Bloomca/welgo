@@ -65,6 +65,8 @@ app.listen(3000, () => console.log('I am up and running at port 3000!'));
 
 I used library [htm](https://github.com/developit/htm), which is especially nifty since you don't need to transpile your code (we don't do it very often in Node.js codebase). However, you can use both `Welgo.createElement()` and JSX setup, if it works better for you.
 
+> see a full [example](https://github.com/Bloomca/welgo-example)
+
 ## Installation
 
 `welgo` is published on npm, you will need to save it into your dependencies:
