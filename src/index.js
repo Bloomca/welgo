@@ -7,7 +7,8 @@ module.exports = {
   render,
   createElement,
   Fragment,
-  irender
+  irender,
+  renderer: renderHTML
 };
 
 async function render(tree, resolver) {
