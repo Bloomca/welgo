@@ -9,7 +9,10 @@ async function irender(tree, resolver, { depth = null } = {}) {
     return "";
   }
 
-  const nextDepth = depth === null ? null : depth - 1;
+  // not the cleanest code, but it works.
+  // it keeps `null` if it is a null already,
+  // and does not allow it to go below zero.
+  const nextDepth = depth === null ? null : depth === 0 ? depth : depth - 1;
 
   const tag = tree.nodeName;
   const props = tree.props || {};
@@ -35,13 +38,15 @@ async function irender(tree, resolver, { depth = null } = {}) {
       };
     }
   } else if (typeof tag === "function") {
+    const processedChildren = await processCurrentChildren();
+    props.children = processedChildren;
+
     if (depth === 0) {
       return {
-        component: tag
+        component: tag,
+        tree: processedChildren
       };
     } else {
-      const processedChildren = await processCurrentChildren();
-      props.children = processedChildren;
       const childTree = await tag(props, resolver);
       const tree = await irender(childTree, resolver, { depth: nextDepth });
       return {
