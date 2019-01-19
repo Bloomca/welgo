@@ -126,6 +126,10 @@ There are several caveats to be aware of:
 - you can pass a string to the `style` property
 - if you pass an object to the `style` property, you have to use hyphen-case, **not camelCase**!
 
+## Testing
+
+For testing, you have two choices. You can just use `render` method to render HTML string and search through it by yourself, or you can use [weltest](https://github.com/Bloomca/weltest) library. This library provides capabilities to search by components, and wraps your queries in [jsdom](https://github.com/jsdom/jsdom), so you can use regular DOM API.
+
 ## Limitations
 
 Components have no lifecycle hooks: there is no real "life" on the server, we get a request, form a reply and send it to the user, done. If you want to do anything on the client-side, you should do it in your JavaScript files using query selectors in the browser. This library has zero runtime and it is designed to be so.
